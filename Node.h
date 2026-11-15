@@ -1,19 +1,19 @@
-//节点基类
+// 节点基类
 #pragma once
 #include <string>
-using namespace std;
+
 class Node
 {
 protected:
-    string name;//节点名称
+    std::string name;
 
 public:
-    Node(const string& name);//构造函数
+    Node(const std::string& name);
 
-    string getName() const;//获取节点名称
+    std::string getName() const;
 
-    virtual void init() = 0;//纯虚函数
+    virtual void init() = 0;
     virtual void shutdown() = 0;
 
-    virtual ~Node() = default;//析构函数
+    virtual ~Node() = default;
 };
