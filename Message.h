@@ -1,14 +1,13 @@
 #pragma once//防止重复处理头文件
 #include <string>
-using namespace std;
 class Message
 {
 private:
-    string content;
-    string timestamp;
+    std::string content;
+    std::string timestamp;
 
 public:
-    Message(const string& msg);
-    string getContent() const;
-    string getTimestamp() const;
+    Message(const std::string& msg);
+    std::string getContent() const;
+    std::string getTimestamp() const;
 };
