@@ -7,7 +7,7 @@ private:
     std::string timestamp;
 
 public:
-    Message(const std::string& msg);
-    std::string getContent() const;
-    std::string getTimestamp() const;
+    explicit Message(const std::string& msg);
+    const std::string getContent() const;
+    const std::string getTimestamp() const;
 };

@@ -4,23 +4,23 @@
 #include <iomanip>
 #include <sstream>
 using namespace std;
-Message::Message(const string& msg): content(msg)//初始化成员列表
+Message::Message(const string& msg): content(msg)
 {
-    auto now = chrono::system_clock::now();
-    time_t time = chrono::system_clock::to_time_t(now);
+    auto now = chrono::system_clock::now();//获取当前时刻C++
+    time_t time = chrono::system_clock::to_time_t(now);//转换成time_t类型
 
     stringstream ss;
-    ss << put_time(localtime(&time), "%Y-%m-%d %H:%M:%S");//按指定规格输出时间%Y年%m月%d日 %H时%M分%S秒
+    ss << put_time(localtime(&time), "%Y-%m-%d %H:%M:%S");//格式化输出
 
-    timestamp = ss.str();//获取格式化后的时间字符串
+    timestamp = ss.str();//取时间字符串
 }
 
-string Message::getContent() const
+const string Message::getContent() const
 {
     return content;
 }
 
-string Message::getTimestamp() const
+const string Message::getTimestamp() const
 {
     return timestamp;
 }
