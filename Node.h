@@ -2,8 +2,9 @@
 #pragma once
 #include <string>
 #include <stdexcept>
+#include <memory>
 
-class Node
+class Node: public std::enable_shared_from_this<Node>
 {
 protected:
     std::string name;
