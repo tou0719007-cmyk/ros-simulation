@@ -1,6 +1,7 @@
 // 节点基类
 #pragma once
 #include <string>
+#include <stdexcept>
 
 class Node
 {
@@ -10,7 +11,7 @@ protected:
 public:
     Node(const std::string& name);
 
-    std::string getName() const;
+    const std::string& getName() const;
 
     virtual void init() = 0;
     virtual void shutdown() = 0;
