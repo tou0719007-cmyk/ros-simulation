@@ -141,12 +141,138 @@ void testT05()
         auto p = std::make_shared<Publisher>("t05_p", "/t05");
         auto s = std::make_shared<Subscriber>("t05_s", "/t05");
         p->init(); s->init();
-        // 使用条件变量和原子变量验证异步性：
-        // 发布后立即检查 Subscriber 是否已经开始处理，而不是依赖固定时间阈值
         p->publish("t05-async");
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
         cleanup(p, s);
         TestReporter::pass("发布t05-async后程序未卡住，Subscriber工作线程在后台处理消息", "T05", "异步通信", "Publisher发布不被Subscriber处理阻塞");
+    });
+}
+
+void testT06()
+{
+    TestReporter::run("T06", "生命周期", "init/shutdown/shutdownAll正常执行", []()
+    {
+        auto p = std::make_shared<Publisher>("t06_p", "/t06");
+        auto s = std::make_shared<Subscriber>("t06_s", "/t06");
+        p->init(); s->init();
+        p->publish("t06-life");
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
+        s->shutdown();
+        ROSCore::getInstance().shutdownAll();
+        cleanup(p, nullptr);
+        TestReporter::pass("init、publish、shutdown、shutdownAll均正常执行", "T06", "生命周期", "init/shutdown/shutdownAll正常执行");
+    });
+}
+
+void testT07()
+{
+    TestReporter::run("T07", "空节点名称", "空名称创建节点时抛出invalid_argument", []()
+    {
+        bool caught = false;
+        try
+        {
+            auto p = std::make_shared<Publisher>("", "/t07");
+        }
+        catch (const std::invalid_argument&)
+        {
+            caught = true;
+        }
+        TestReporter::pass("空节点名称创建Publisher时抛出异常", "T07", "空节点名称", "空名称创建节点时抛出invalid_argument");
+    });
+}
+
+void testT08()
+{
+    TestReporter::run("T08", "重复节点注册", "同名节点重复注册失败，第一个节点仍可用", []()
+    {
+        auto p1 = std::make_shared<Publisher>("t08_p", "/t08");
+        auto s = std::make_shared<Subscriber>("t08_s", "/t08");
+        p1->init(); s->init();
+
+        auto p2 = std::make_shared<Publisher>("t08_p", "/t08");
+        bool caught = false;
+        try { p2->init(); }
+        catch (const std::exception&) { caught = true; }
+
+        p1->publish("t08-ok");
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
+        cleanup(p1, s);
+        if (caught)
+            TestReporter::pass("第二个同名节点init失败，第一个节点仍可发布", "T08", "重复节点注册", "同名节点重复注册失败，第一个节点仍可用");
+        else
+            TestReporter::fail("第二个同名节点init未抛出异常", "T08", "重复节点注册", "同名节点重复注册失败，第一个节点仍可用");
+    });
+}
+
+void testT09()
+{
+    TestReporter::run("T09", "空消息", "发布空消息时抛出invalid_argument", []()
+    {
+        auto p = std::make_shared<Publisher>("t09_p", "/t09");
+        auto s = std::make_shared<Subscriber>("t09_s", "/t09");
+        p->init(); s->init();
+        bool caught = false;
+        try
+        {
+            p->publish("");
+        }
+        catch (const std::invalid_argument&)
+        {
+            caught = true;
+        }
+        cleanup(p, s);
+        if (caught)
+            TestReporter::pass("发布空消息时抛出异常", "T09", "空消息", "发布空消息时抛出invalid_argument");
+        else
+            TestReporter::fail("发布空消息未抛出异常", "T09", "空消息", "发布空消息时抛出invalid_argument");
+    });
+}
+
+void testT10()
+{
+    TestReporter::run("T10", "不存在的Topic", "发布到无订阅者Topic时不抛异常", []()
+    {
+        auto p = std::make_shared<Publisher>("t10_p", "/t10-none");
+        p->init();
+        try
+        {
+            p->publish("t10-warn");
+            p->shutdown();
+            TestReporter::pass("发布无订阅者Topic未抛异常", "T10", "不存在的Topic", "发布到无订阅者Topic时不抛异常");
+        }
+        catch (const std::exception& e)
+        {
+            p->shutdown();
+            TestReporter::fail("发布无订阅者Topic时抛出异常: " + std::string(e.what()), "T10", "不存在的Topic", "发布到无订阅者Topic时不抛异常");
+        }
+    });
+}
+
+void testT11()
+{
+    TestReporter::run("T11", "重复初始化", "重复调用init不会崩溃且第二次直接返回", []()
+    {
+        auto p = std::make_shared<Publisher>("t11_p", "/t11");
+        auto s = std::make_shared<Subscriber>("t11_s", "/t11");
+        p->init(); s->init();
+        p->init(); s->init();
+        p->publish("t11-repeat");
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
+        cleanup(p, s);
+        TestReporter::pass("重复init后仍可发布，无崩溃", "T11", "重复初始化", "重复调用init不会崩溃且第二次直接返回");
+    });
+}
+
+void testT12()
+{
+    TestReporter::run("T12", "重复关闭", "重复调用shutdown不会崩溃且第二次直接返回", []()
+    {
+        auto p = std::make_shared<Publisher>("t12_p", "/t12");
+        auto s = std::make_shared<Subscriber>("t12_s", "/t12");
+        p->init(); s->init();
+        p->shutdown(); p->shutdown();
+        s->shutdown(); s->shutdown();
+        TestReporter::pass("重复shutdown后程序正常", "T12", "重复关闭", "重复调用shutdown不会崩溃且第二次直接返回");
     });
 }
 }
@@ -158,6 +284,13 @@ int main()
     testT03();
     testT04();
     testT05();
+    testT06();
+    testT07();
+    testT08();
+    testT09();
+    testT10();
+    testT11();
+    testT12();
     TestReporter::summary();
     return TestReporter::failedCount() == 0 ? 0 : 1;
 }
