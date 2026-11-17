@@ -177,7 +177,10 @@ void testT07()
         {
             caught = true;
         }
-        TestReporter::pass("空节点名称创建Publisher时抛出异常", "T07", "空节点名称", "空名称创建节点时抛出invalid_argument");
+        if (caught)
+            TestReporter::pass("空节点名称创建Publisher时抛出异常", "T07", "空节点名称", "空名称创建节点时抛出invalid_argument");
+        else
+            TestReporter::fail("空节点名称创建Publisher时未抛出异常", "T07", "空节点名称", "空名称创建节点时抛出invalid_argument");
     });
 }
 
