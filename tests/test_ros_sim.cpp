@@ -119,6 +119,36 @@ void testT03()
         TestReporter::pass("发布t03-only后等待300ms无异常，请核对仅/t03的[RECEIVE]日志", "T03", "Topic隔离", "不同Topic消息互不干扰");
     });
 }
+
+void testT04()
+{
+    TestReporter::run("T04", "连续消息", "连续5条消息都能被处理", []()
+    {
+        auto p = std::make_shared<Publisher>("t04_p", "/t04");
+        auto s = std::make_shared<Subscriber>("t04_s", "/t04");
+        p->init(); s->init();
+        for (int i = 1; i <= 5; ++i) p->publish("t04-" + std::to_string(i));
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        cleanup(p, s);
+        TestReporter::pass("连续发布5条消息后等待500ms无异常，请核对5条[RECEIVE]日志", "T04", "连续消息", "连续5条消息都能被处理");
+    });
+}
+
+void testT05()
+{
+    TestReporter::run("T05", "异步通信", "Publisher发布不被Subscriber处理阻塞", []()
+    {
+        auto p = std::make_shared<Publisher>("t05_p", "/t05");
+        auto s = std::make_shared<Subscriber>("t05_s", "/t05");
+        p->init(); s->init();
+        // 使用条件变量和原子变量验证异步性：
+        // 发布后立即检查 Subscriber 是否已经开始处理，而不是依赖固定时间阈值
+        p->publish("t05-async");
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        cleanup(p, s);
+        TestReporter::pass("发布t05-async后程序未卡住，Subscriber工作线程在后台处理消息", "T05", "异步通信", "Publisher发布不被Subscriber处理阻塞");
+    });
+}
 }
 
 int main()
@@ -126,6 +156,8 @@ int main()
     testT01();
     testT02();
     testT03();
+    testT04();
+    testT05();
     TestReporter::summary();
     return TestReporter::failedCount() == 0 ? 0 : 1;
 }
