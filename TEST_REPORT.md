@@ -136,3 +136,10 @@ g++ -std=c++17 -Wall -Wextra -g tests/test_ros_sim.cpp Message.cpp Node.cpp Publ
 - 无测试之间的状态污染。
 - 核心代码 Bug 已修复并提交。
 - 测试代码按增量阶段提交。
+
+## 第一次运行崩溃排查记录
+
+- 现象：第一次运行 main.exe 出现 	erminate called recursively 和 std::invalid_argument: 消息内容不能为空!，第二次运行正常。
+- 根因：第一次运行的是修复前编译的 main.exe（workerLoop 中仍有 Message msg("") 占位构造），第二次运行的是修复后重新编译的 main.exe（workerLoop 已改为 std::optional<Message>）。两次运行使用了不同的编译版本，并非竞态问题。
+- 验证：修复后连续运行 main.exe 20 次，全部退出码为 0，无 terminate、无 invalid_argument、无未处理异常。T01-T12 全部通过。
+- 结论：当前代码无残留空消息构造问题，工作线程生命周期正常，无需进一步修改核心代码。
