@@ -1,11 +1,18 @@
 #include "Publisher.h"
 #include "ROSCore.h"
-
 #include <iostream>
 #include <stdexcept>
 
-
-Publisher::Publisher(const std::string& name,const std::string& topic) : Node(name), topic(topic){}
+Publisher::Publisher(
+    const std::string& name,
+    const std::string& topic
+) : Node(name), topic(topic)
+{
+    if (topic.empty())
+    {
+        throw std::invalid_argument("Topic 名称不能为空");
+    }
+}
 
 void Publisher::init()
 {
@@ -13,15 +20,14 @@ void Publisher::init()
     {
         return;
     }
-
-    auto self = std::dynamic_pointer_cast<Publisher>(shared_from_this());
-
+    auto self = std::dynamic_pointer_cast<Publisher>(
+        shared_from_this()
+    );
     ROSCore::getInstance().registerPublisher(topic, self);
-
     active.store(true);
-
     std::cout << "[INFO] Publisher " << name
-              << " 初始化成功,Topic: " << topic << std::endl;
+              << " 初始化成功，Topic: " << topic
+              << std::endl;
 }
 
 void Publisher::publish(const std::string& content)
@@ -30,12 +36,10 @@ void Publisher::publish(const std::string& content)
     {
         throw std::runtime_error("发布者尚未初始化");
     }
-
     Message msg(content);
-
     std::cout << "[PUBLISH] " << name
-              << " 发布消息: " << msg.getContent() << std::endl;
-
+              << " 发布消息: " << msg.getContent()
+              << std::endl;
     ROSCore::getInstance().publish(topic, msg);
 }
 
@@ -45,9 +49,7 @@ void Publisher::shutdown()
     {
         return;
     }
-
     ROSCore::getInstance().unregisterNode(name);
-
     std::cout << "[INFO] Publisher " << name
               << " 已关闭" << std::endl;
 }

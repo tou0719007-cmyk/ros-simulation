@@ -1,32 +1,37 @@
 #include "Message.h"
-#include <chrono>//获取当前系统时间
+#include <chrono>
 #include <ctime>
 #include <iomanip>
 #include <sstream>
 #include <mutex>
-using namespace std;
-Message::Message(const string& msg): content(msg)
-{
-    if (content.empty())
-    {
-        throw invalid_argument("消息内容不能为空!");
-    }
-    auto now = chrono::system_clock::now();//获取当前时刻C++
-    time_t time = chrono::system_clock::to_time_t(now);//转换成time_t类型
-    static std::mutex timeMutex;
-    std::lock_guard<std::mutex> lock(timeMutex);//加锁，防止多线程同时访问localtime
-    stringstream ss;
-    ss << put_time(localtime(&time), "%Y-%m-%d %H:%M:%S");//格式化输出
+#include <stdexcept>
 
-    timestamp = ss.str();//取时间字符串
+Message::Message(const std::string& msg)
+    : content(msg)
+{
+    if (msg.empty())
+    {
+        throw std::invalid_argument("消息内容不能为空");
+    }
+    auto now = std::chrono::system_clock::now();
+    std::time_t currentTime =
+        std::chrono::system_clock::to_time_t(now);
+    static std::mutex timeMutex;
+    std::lock_guard<std::mutex> lock(timeMutex);
+    std::stringstream ss;
+    ss << std::put_time(
+        std::localtime(&currentTime),
+        "%Y-%m-%d %H:%M:%S"
+    );
+    timestamp = ss.str();
 }
 
-const string Message::getContent() const
+const std::string& Message::getContent() const
 {
     return content;
 }
 
-const string Message::getTimestamp() const
+const std::string& Message::getTimestamp() const
 {
     return timestamp;
 }
