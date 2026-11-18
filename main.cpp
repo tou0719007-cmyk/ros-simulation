@@ -5,9 +5,11 @@
 #include <memory>
 #include <thread>
 #include <chrono>
+#include <cstdlib>
 
 int main()
 {
+    system("chcp 65001");
     try
     {
         // 创建发布者
