@@ -3,7 +3,6 @@
 
 #include <iostream>
 #include <stdexcept>
-#include <optional>
 
 Subscriber::Subscriber(
     const std::string& name,
@@ -60,8 +59,6 @@ void Subscriber::workerLoop()
 {
     while (true)
     {
-        std::optional<Message> msg;
-
         {
             std::unique_lock<std::mutex> lock(queueMutex);
 
@@ -75,17 +72,13 @@ void Subscriber::workerLoop()
                 break;
             }
 
-            msg = std::make_optional<Message>(messageQueue.front());
+            std::cout << "[RECEIVE] " << name
+                      << " 收到消息: " << messageQueue.front().getContent()
+                      << " | 时间: " << messageQueue.front().getTimestamp()
+                      << std::endl;
             messageQueue.pop();
         }
 
-        if (msg)
-        {
-            std::cout << "[RECEIVE] " << name
-                      << " 收到消息: " << msg->getContent()
-                      << " | 时间: " << msg->getTimestamp()
-                      << std::endl;
-        }
     }
 }
 
